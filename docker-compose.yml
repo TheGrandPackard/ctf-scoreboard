@@ -1,0 +1,15 @@
+version: '3'
+services:
+  mariadb:
+    image: "bitnami/mariadb:latest"
+    volumes:
+      - ./docker/db:/bitnami/mariadb
+    environment:
+      MARIADB_DATABASE: "ctf-scoreboard"
+      MARIADB_USER: "ctf-scoreboard"
+      MARIADB_PASSWORD: "qwerasdf"
+      MARIADB_ROOT_PASSWORD: "qwerasdf"
+    ports:
+      - "3306:3306"
+    expose:
+      - "3306"
