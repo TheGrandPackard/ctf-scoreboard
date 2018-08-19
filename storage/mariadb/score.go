@@ -14,8 +14,8 @@ type ScoreStorage interface {
 	CreateScore(score *model.Score) (err error)
 	GetScores() (scores []*model.Score, err error)
 	GetUserScores(user model.User) (scores []*model.Score, err error)
-	GetQuestionScores(question model.Question) (scores []*model.Score, err error)
-	GetScore(user model.User, question model.Question) (score *model.Score, err error)
+	GetQuestionScores(question *model.Question) (scores []*model.Score, err error)
+	GetScore(user *model.User, question *model.Question) (score *model.Score, err error)
 	DeleteScore(score *model.Score) (err error)
 }
 
@@ -88,7 +88,7 @@ func (s *Storage) GetScores() (scores []*model.Score, err error) {
 }
 
 // GetUserScores - getUserScores
-func (s *Storage) GetUserScores(user model.User) (scores []*model.Score, err error) {
+func (s *Storage) GetUserScores(user *model.User) (scores []*model.Score, err error) {
 
 	rows, err := s.db.Query(`
 		SELECT user_id,
@@ -116,7 +116,7 @@ func (s *Storage) GetUserScores(user model.User) (scores []*model.Score, err err
 }
 
 // GetQuestionScores - getQuestionScores
-func (s *Storage) GetQuestionScores(question model.Question) (scores []*model.Score, err error) {
+func (s *Storage) GetQuestionScores(question *model.Question) (scores []*model.Score, err error) {
 
 	rows, err := s.db.Query(`
 		SELECT user_id,
@@ -144,7 +144,7 @@ func (s *Storage) GetQuestionScores(question model.Question) (scores []*model.Sc
 }
 
 // GetScore - getScore
-func (s *Storage) GetScore(user model.User, question model.Question) (score *model.Score, err error) {
+func (s *Storage) GetScore(user *model.User, question *model.Question) (score *model.Score, err error) {
 
 	err = s.db.QueryRow(`
 		SELECT UNIX_TIMESTAMP(created)

@@ -7,6 +7,8 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// TODO Foreign Key Constraints
+
 // Storage - storage
 type Storage struct {
 	db *sqlx.DB

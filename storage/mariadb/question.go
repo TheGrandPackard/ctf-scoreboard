@@ -147,7 +147,7 @@ func (s *Storage) GetQuestion(question *model.Question) (err error) {
 			   points,
 			   UNIX_TIMESTAMP(created)
 		FROM question
-		ORDER BY name ASC`).Scan(
+		ORDER BY id ASC`).Scan(
 		&question.ID,
 		&question.Category.ID,
 		&question.Team.ID,
@@ -177,7 +177,7 @@ func (s *Storage) GetQuestion(question *model.Question) (err error) {
 }
 
 // UpdateQuestion - updateQuestion
-func (s *Storage) UpdateQuestion(Question *model.Question) (err error) {
+func (s *Storage) UpdateQuestion(question *model.Question) (err error) {
 
 	_, err = s.db.Exec(`
 	UPDATE question
@@ -189,13 +189,14 @@ func (s *Storage) UpdateQuestion(Question *model.Question) (err error) {
 		file = ?,
 		points = ?
 	WHERE id = ?`,
-		Question.Category.ID,
-		Question.Team.ID,
-		Question.Text,
-		Question.Answer,
-		Question.Hint,
-		Question.File,
-		Question.Points)
+		question.Category.ID,
+		question.Team.ID,
+		question.Text,
+		question.Answer,
+		question.Hint,
+		question.File,
+		question.Points,
+		question.ID)
 
 	return
 }
