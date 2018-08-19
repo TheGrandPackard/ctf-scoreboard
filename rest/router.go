@@ -25,13 +25,13 @@ func InitializeRoutes(s *mariadb.Storage) (err error) {
 
 	r.HandleFunc("/api/category", createCategory).Methods("POST")               // Create a new category
 	r.HandleFunc("/api/category/{id:[0-9]+}", getCategory).Methods("GET")       // Get existing category by ID
-	r.HandleFunc("/api/category/{id:[0-9]+}", updateCategory).Methods("PUT")    // Update existing category by ID
+	r.HandleFunc("/api/category/{id:[0-9]+}", updateCategory).Methods("POST")   // Update existing category by ID
 	r.HandleFunc("/api/category/{id:[0-9]+}", deleteCategory).Methods("DELETE") // Delete existing category by ID
 	r.HandleFunc("/api/categories", getAllCategories).Methods("GET")            // Get all categories
 
 	r.HandleFunc("/api/question", createQuestion).Methods("POST")               // Create a new question
 	r.HandleFunc("/api/question/{id:[0-9]+}", getQuestion).Methods("GET")       // Get existing question by ID
-	r.HandleFunc("/api/question/{id:[0-9]+}", updateQuestion).Methods("PUT")    // Update existing question by ID
+	r.HandleFunc("/api/question/{id:[0-9]+}", updateQuestion).Methods("POST")   // Update existing question by ID
 	r.HandleFunc("/api/question/{id:[0-9]+}", deleteQuestion).Methods("DELETE") // Delete existing question by ID
 	r.HandleFunc("/api/questions", getAllQuestions).Methods("GET")              // Get all questions
 
@@ -42,13 +42,13 @@ func InitializeRoutes(s *mariadb.Storage) (err error) {
 
 	r.HandleFunc("/api/team", createTeam).Methods("POST")               // Create a new team
 	r.HandleFunc("/api/team/{id:[0-9]+}", getTeam).Methods("GET")       // Get existing team by ID
-	r.HandleFunc("/api/team/{id:[0-9]+}", updateTeam).Methods("PUT")    // Update existing team by ID
+	r.HandleFunc("/api/team/{id:[0-9]+}", updateTeam).Methods("POST")   // Update existing team by ID
 	r.HandleFunc("/api/team/{id:[0-9]+}", deleteTeam).Methods("DELETE") // Delete existing team by ID
 	r.HandleFunc("/api/teams", getAllTeams).Methods("GET")              // Get all teams
 
 	r.HandleFunc("/api/user", createUser).Methods("POST")                        // Create a new user
 	r.HandleFunc("/api/user/{id:[0-9]+}", getUser).Methods("GET")                // Get existing user by ID
-	r.HandleFunc("/api/user/{id:[0-9]+}", updateUser).Methods("PUT")             // Update existing user by ID
+	r.HandleFunc("/api/user/{id:[0-9]+}", updateUser).Methods("POST")            // Update existing user by ID
 	r.HandleFunc("/api/user/{id:[0-9]+}", deleteUser).Methods("DELETE")          // Delete existing user by ID
 	r.HandleFunc("/api/users", getAllUsers).Methods("GET")                       // Get all users
 	r.HandleFunc("/api/user/login", loginUser).Methods("POST")                   // Authenicate exister user for login, returns authorization token

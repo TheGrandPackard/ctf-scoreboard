@@ -45,7 +45,6 @@ func getCategory(w http.ResponseWriter, r *http.Request) {
 
 func updateCategory(w http.ResponseWriter, r *http.Request) {
 
-	// TEST - PUT not working with parse form
 	vars := mux.Vars(r)
 	idString := vars["id"]
 	id, err := strconv.ParseUint(idString, 10, 64)
