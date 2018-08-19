@@ -2,7 +2,6 @@ package rest
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -10,13 +9,17 @@ import (
 	"github.com/thegrandpackard/ctf-scoreboard/model"
 )
 
-// TODO Authorization - Needs admin for create/update/delete
-
 func createCategory(w http.ResponseWriter, r *http.Request) {
 
-	r.ParseForm()
-	category := &model.Category{Name: r.Form.Get("name")}
-	err := getStorage().CreateCategory(category)
+	category := &model.Category{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&category)
+	if err != nil {
+		handleError(w, r, err)
+		return
+	}
+
+	err = getStorage().CreateCategory(category)
 	if err != nil {
 		handleError(w, r, err)
 		return
@@ -29,10 +32,10 @@ func createCategory(w http.ResponseWriter, r *http.Request) {
 func getCategory(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
-	idString := vars["id"]
-	id, err := strconv.ParseUint(idString, 10, 64)
+	id, _ := strconv.ParseUint(vars["id"], 10, 64)
 	category := &model.Category{ID: id}
-	err = getStorage().GetCategory(category)
+
+	err := getStorage().GetCategory(category)
 	if err != nil {
 		handleError(w, r, err)
 		return
@@ -40,17 +43,21 @@ func getCategory(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(category)
-
 }
 
 func updateCategory(w http.ResponseWriter, r *http.Request) {
 
+	category := &model.Category{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&category)
+	if err != nil {
+		handleError(w, r, err)
+		return
+	}
 	vars := mux.Vars(r)
-	idString := vars["id"]
-	id, err := strconv.ParseUint(idString, 10, 64)
-	r.ParseForm()
-	category := &model.Category{ID: id, Name: r.PostForm.Get("name")}
-	fmt.Printf("%+v", category)
+	id, _ := strconv.ParseUint(vars["id"], 10, 64)
+	category.ID = id
+
 	err = getStorage().UpdateCategory(category)
 	if err != nil {
 		handleError(w, r, err)
@@ -64,10 +71,10 @@ func updateCategory(w http.ResponseWriter, r *http.Request) {
 func deleteCategory(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
-	idString := vars["id"]
-	id, err := strconv.ParseUint(idString, 10, 64)
+	id, _ := strconv.ParseUint(vars["id"], 10, 64)
 	category := &model.Category{ID: id}
-	err = getStorage().DeleteCategory(category)
+
+	err := getStorage().DeleteCategory(category)
 	if err != nil {
 		handleError(w, r, err)
 		return

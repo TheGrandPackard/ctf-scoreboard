@@ -1,6 +1,8 @@
 package rest
 
-import "net/http"
+import (
+	"net/http"
+)
 
 func createQuestion(w http.ResponseWriter, r *http.Request) {
 

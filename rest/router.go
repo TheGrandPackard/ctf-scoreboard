@@ -23,6 +23,8 @@ func InitializeRoutes(s *mariadb.Storage) (err error) {
 
 	r := mux.NewRouter()
 
+	// TODO Authorization - Need admin for create/update/delete. Enforce with HTTP middleware and JWT passed in with request
+
 	r.HandleFunc("/api/category", createCategory).Methods("POST")               // Create a new category
 	r.HandleFunc("/api/category/{id:[0-9]+}", getCategory).Methods("GET")       // Get existing category by ID
 	r.HandleFunc("/api/category/{id:[0-9]+}", updateCategory).Methods("POST")   // Update existing category by ID
