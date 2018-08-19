@@ -1,16 +1,27 @@
 package mariadb
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/thegrandpackard/ctf-scoreboard/model"
 )
 
-// CreateCategoryTable - createCategoryTable
-func CreateCategoryTable(db *sql.DB) (err error) {
+// CategoryStorage - categoryStorage
+type CategoryStorage interface {
+	CreateCategoryTable() (err error)
+	DeleteCategoryTable() (err error)
 
-	_, err = db.Exec(`
+	CreateCategory(category *model.Category) (err error)
+	GetCategories() (categories []*model.Category, err error)
+	GetCategory(category *model.Category) (err error)
+	UpdateCategory(category *model.Category) (err error)
+	DeleteCategory(category *model.Category) (err error)
+}
+
+// CreateCategoryTable - createCategoryTable
+func (s *Storage) CreateCategoryTable() (err error) {
+
+	_, err = s.db.Exec(`
 		CREATE TABLE IF NOT EXISTS category (
 		id INT(6) UNSIGNED AUTO_INCREMENT,
 		name TEXT NOT NULL,
@@ -23,23 +34,23 @@ func CreateCategoryTable(db *sql.DB) (err error) {
 }
 
 // DeleteCategoryTable - deleteCategoryTable
-func DeleteCategoryTable(db *sql.DB) (err error) {
+func (s *Storage) DeleteCategoryTable() (err error) {
 
-	_, err = db.Exec(`DROP TABLE IF EXISTS category`)
+	_, err = s.db.Exec(`DROP TABLE IF EXISTS category`)
 
 	return
 }
 
 // CreateCategory - createCategory
-func CreateCategory(db *sql.DB, name string) (category model.Category, err error) {
+func (s *Storage) CreateCategory(category *model.Category) (err error) {
 
-	result, err := db.Exec(`
+	result, err := s.db.Exec(`
 		INSERT 
 		INTO category
 		SET name = ?,
 			created = NOW(),
 			display_order = IFNULL((SELECT MAX(display_order) FROM category AS cat2) + 1, 0)`,
-		name)
+		category.Name)
 	if err != nil {
 		return
 	}
@@ -49,25 +60,28 @@ func CreateCategory(db *sql.DB, name string) (category model.Category, err error
 		return
 	}
 
-	category = model.Category{ID: uint64(id), Name: name, Created: uint64(time.Now().Unix())}
-
+	category.ID = uint64(id)
+	category.Created = uint64(time.Now().Unix())
 	return
 }
 
 // GetCategories - getCategories
-func GetCategories(db *sql.DB) (categories []model.Category, err error) {
+func (s *Storage) GetCategories() (categories []*model.Category, err error) {
 
-	rows, err := db.Query(`
+	rows, err := s.db.Query(`
 		SELECT id,
 			   name,
 			   UNIX_TIMESTAMP(created)
 		FROM category
 		ORDER BY display_order ASC, name ASC`)
+	if err != nil {
+		return nil, err
+	}
 
 	defer rows.Close()
 
 	for rows.Next() {
-		category := model.Category{}
+		category := &model.Category{}
 		err = rows.Scan(&category.ID, &category.Name, &category.Created)
 		if err != nil {
 			return
@@ -78,10 +92,22 @@ func GetCategories(db *sql.DB) (categories []model.Category, err error) {
 	return
 }
 
-// UpdateCategory - updateCategory
-func UpdateCategory(db *sql.DB, category model.Category) (err error) {
+// GetCategory - getCategory
+func (s *Storage) GetCategory(category *model.Category) (err error) {
 
-	_, err = db.Exec(`
+	err = s.db.QueryRow(`
+		SELECT id,
+			   name,
+			   UNIX_TIMESTAMP(created)
+		FROM category
+		WHERE id = ?`, category.ID).Scan(&category.ID, &category.Name, &category.Created)
+	return
+}
+
+// UpdateCategory - updateCategory
+func (s *Storage) UpdateCategory(category *model.Category) (err error) {
+
+	_, err = s.db.Exec(`
 	UPDATE category
 	SET name = ?
 	WHERE id = ?`,
@@ -92,13 +118,13 @@ func UpdateCategory(db *sql.DB, category model.Category) (err error) {
 }
 
 // DeleteCategory - deleteCategory
-func DeleteCategory(db *sql.DB, id uint64) (err error) {
+func (s *Storage) DeleteCategory(category *model.Category) (err error) {
 
-	_, err = db.Exec(`
+	_, err = s.db.Exec(`
 	DELETE 
 	FROM category
 	WHERE id = ?`,
-		id)
+		category.ID)
 
 	return
 }
