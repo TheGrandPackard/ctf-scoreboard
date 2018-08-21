@@ -14,6 +14,7 @@ type UserStorage interface {
 	CreateUser(user *model.User) (err error)
 	GetUsers() (users []*model.User, err error)
 	GetUser(user *model.User) (err error)
+	GetUserAuthentication(user *model.User) (err error)
 	UpdateUser(user *model.User) (err error)
 	UpdateUserPassword(user *model.User) (err error)
 	DeleteUser(user *model.User) (err error)
@@ -123,6 +124,40 @@ func (s *Storage) GetUser(user *model.User) (err error) {
 			   UNIX_TIMESTAMP(created)
 		FROM user
 		WHERE id = ?`, user.ID).Scan(&user.ID, &user.Admin, &user.Username, &user.EmailAddress, &user.Team.ID, &user.Created)
+	if err != nil {
+		return
+	}
+
+	if user.Team.ID > 0 {
+		err = s.GetTeam(&user.Team)
+		if err != nil {
+			return err
+		}
+	}
+
+	return
+}
+
+// GetUserAuthentication - getUserAuthentication
+func (s *Storage) GetUserAuthentication(user *model.User) (err error) {
+
+	err = s.db.QueryRow(`
+		SELECT id,
+			   admin,
+			   username,
+			   password,
+			   email_address,
+			   team_id,
+			   UNIX_TIMESTAMP(created)
+		FROM user
+		WHERE username = ?`, user.Username).Scan(
+		&user.ID,
+		&user.Admin,
+		&user.Username,
+		&user.Password,
+		&user.EmailAddress,
+		&user.Team.ID,
+		&user.Created)
 	if err != nil {
 		return
 	}

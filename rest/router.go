@@ -2,16 +2,23 @@ package rest
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"github.com/thegrandpackard/ctf-scoreboard/model"
 	"github.com/thegrandpackard/ctf-scoreboard/storage/mariadb"
 )
 
 var storage *mariadb.Storage
+
+// TODO: Move this to the config file
+var mySigningKey = []byte("s3cr3t")
 
 func getStorage() *mariadb.Storage {
 	return storage
@@ -74,26 +81,73 @@ type authenticatedHandlerFunc (func(w http.ResponseWriter, r *http.Request, u *m
 // HTTP Logging and Authentication
 func logHandler(next func(w http.ResponseWriter, r *http.Request, u *model.User)) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("Handled HTTP Request: %+v", r)
 		// TODO: Make like apache logging
-		// TODO: Authenticate user to add to logging and also pass through for authorization to endpoints
-		u := &model.User{}
-		next(w, r, u)
+		log.Printf("Handled HTTP Request: %+v", r)
+
+		tokenString := r.Header.Get("Authorization")
+		if tokenString == "" {
+			next(w, r, nil)
+			return
+		}
+
+		// Parse token from header
+		tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+			}
+
+			return mySigningKey, nil
+		})
+		if err != nil {
+			handleError(w, r, err)
+			return
+		}
+
+		// Get user from token
+		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+			log.Printf("ID: %+v, Username: %+v, expiration: %+v", claims["id"], claims["username"], claims["expiration"])
+
+			userID, ok := claims["id"].(float64)
+			if ok {
+				user := &model.User{ID: uint64(userID)}
+				err = getStorage().GetUser(user)
+				if err != nil {
+					handleError(w, r, err)
+					return
+				}
+				next(w, r, user)
+			} else {
+				handleError(w, r, errors.New("Invalid token"))
+				return
+			}
+		} else {
+			handleError(w, r, err)
+			return
+		}
 	})
 }
 
 // Authorization
 func requireUser(next authenticatedHandlerFunc) authenticatedHandlerFunc {
 	return authenticatedHandlerFunc(func(w http.ResponseWriter, r *http.Request, u *model.User) {
-		// TODO: Test for valid user
-		next(w, r, u)
+		if u != nil {
+			next(w, r, u)
+		} else {
+			handleError(w, r, errors.New("User Authorization Required"))
+			return
+		}
 	})
 }
 
 func requireAdmin(next authenticatedHandlerFunc) authenticatedHandlerFunc {
 	return authenticatedHandlerFunc(func(w http.ResponseWriter, r *http.Request, u *model.User) {
-		// TODO: Test for user is admin
-		next(w, r, u)
+		if u != nil && u.Admin {
+			next(w, r, u)
+		} else {
+			handleError(w, r, errors.New("Admin Authorization Required"))
+			return
+		}
 	})
 }
 

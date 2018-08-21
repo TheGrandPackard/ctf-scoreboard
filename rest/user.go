@@ -1,11 +1,14 @@
 package rest
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
+	"time"
 
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"github.com/thegrandpackard/ctf-scoreboard/model"
 )
@@ -132,5 +135,45 @@ func changeUserPassword(w http.ResponseWriter, r *http.Request, u *model.User) {
 }
 
 func loginUser(w http.ResponseWriter, r *http.Request, u *model.User) {
-	// TODO: Implement JWT
+
+	user := &model.User{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&user)
+	if err != nil {
+		handleError(w, r, err)
+		return
+	}
+
+	dbUser := &model.User{Username: user.Username}
+	err = getStorage().GetUserAuthentication(dbUser)
+	if err != nil && err == sql.ErrNoRows {
+		handleError(w, r, errors.New("Invalid username or password"))
+		return
+	} else if err != nil {
+		handleError(w, r, err)
+		return
+	}
+
+	// TODO: bcrypt the submitted password
+	if user.Username == dbUser.Username && user.Password == dbUser.Password {
+		/* Create the token */
+		token := jwt.New(jwt.SigningMethodHS256)
+
+		/* Create a map to store our claims */
+		claims := token.Claims.(jwt.MapClaims)
+
+		/* Set token claims */
+		claims["id"] = dbUser.ID
+		claims["username"] = dbUser.Username
+		claims["expiration"] = time.Now().Add(time.Hour * 24).Unix()
+
+		/* Sign the token with our secret */
+		tokenString, _ := token.SignedString(mySigningKey)
+
+		/* Finally, write the token to the browser window */
+		w.Write([]byte("{ \"token\": \"" + tokenString + "\" }"))
+	} else {
+		handleError(w, r, errors.New("Invalid username or password"))
+		return
+	}
 }
