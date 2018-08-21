@@ -9,7 +9,7 @@ import (
 	"github.com/thegrandpackard/ctf-scoreboard/model"
 )
 
-func createCategory(w http.ResponseWriter, r *http.Request) {
+func createCategory(w http.ResponseWriter, r *http.Request, u *model.User) {
 
 	category := &model.Category{}
 	decoder := json.NewDecoder(r.Body)
@@ -29,7 +29,7 @@ func createCategory(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(category)
 }
 
-func getCategory(w http.ResponseWriter, r *http.Request) {
+func getCategory(w http.ResponseWriter, r *http.Request, u *model.User) {
 
 	vars := mux.Vars(r)
 	id, _ := strconv.ParseUint(vars["id"], 10, 64)
@@ -45,7 +45,7 @@ func getCategory(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(category)
 }
 
-func updateCategory(w http.ResponseWriter, r *http.Request) {
+func updateCategory(w http.ResponseWriter, r *http.Request, u *model.User) {
 
 	category := &model.Category{}
 	decoder := json.NewDecoder(r.Body)
@@ -68,7 +68,7 @@ func updateCategory(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(category)
 }
 
-func deleteCategory(w http.ResponseWriter, r *http.Request) {
+func deleteCategory(w http.ResponseWriter, r *http.Request, u *model.User) {
 
 	vars := mux.Vars(r)
 	id, _ := strconv.ParseUint(vars["id"], 10, 64)
@@ -84,7 +84,7 @@ func deleteCategory(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("{}"))
 }
 
-func getAllCategories(w http.ResponseWriter, r *http.Request) {
+func getAllCategories(w http.ResponseWriter, r *http.Request, u *model.User) {
 
 	categories, err := getStorage().GetCategories()
 	if err != nil {

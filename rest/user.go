@@ -2,6 +2,7 @@ package rest
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -9,7 +10,7 @@ import (
 	"github.com/thegrandpackard/ctf-scoreboard/model"
 )
 
-func createUser(w http.ResponseWriter, r *http.Request) {
+func createUser(w http.ResponseWriter, r *http.Request, u *model.User) {
 
 	user := &model.User{}
 	decoder := json.NewDecoder(r.Body)
@@ -18,6 +19,8 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 		handleError(w, r, err)
 		return
 	}
+
+	// TODO: bcrypt the password
 
 	err = getStorage().CreateUser(user)
 	if err != nil {
@@ -29,7 +32,7 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
-func getUser(w http.ResponseWriter, r *http.Request) {
+func getUser(w http.ResponseWriter, r *http.Request, u *model.User) {
 
 	vars := mux.Vars(r)
 	id, _ := strconv.ParseUint(vars["id"], 10, 64)
@@ -45,7 +48,7 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
-func updateUser(w http.ResponseWriter, r *http.Request) {
+func updateUser(w http.ResponseWriter, r *http.Request, u *model.User) {
 
 	user := &model.User{}
 	decoder := json.NewDecoder(r.Body)
@@ -68,7 +71,7 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
-func deleteUser(w http.ResponseWriter, r *http.Request) {
+func deleteUser(w http.ResponseWriter, r *http.Request, u *model.User) {
 
 	vars := mux.Vars(r)
 	id, _ := strconv.ParseUint(vars["id"], 10, 64)
@@ -84,7 +87,7 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("{}"))
 }
 
-func getAllUsers(w http.ResponseWriter, r *http.Request) {
+func getAllUsers(w http.ResponseWriter, r *http.Request, u *model.User) {
 
 	categories, err := getStorage().GetCategories()
 	if err != nil {
@@ -96,10 +99,38 @@ func getAllUsers(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(categories)
 }
 
-func changeUserPassword(w http.ResponseWriter, r *http.Request) {
-	// TODO
+func changeUserPassword(w http.ResponseWriter, r *http.Request, u *model.User) {
+
+	user := &model.User{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&user)
+	if err != nil {
+		handleError(w, r, err)
+		return
+	}
+	vars := mux.Vars(r)
+	id, _ := strconv.ParseUint(vars["id"], 10, 64)
+	user.ID = id
+
+	if u.ID == user.ID {
+
+		// TODO: bcrypt the password
+
+		err = getStorage().UpdateUserPassword(user)
+		if err != nil {
+			handleError(w, r, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(user)
+	} else {
+		handleError(w, r, errors.New("Incorrect answer"))
+		return
+	}
+
 }
 
-func loginUser(w http.ResponseWriter, r *http.Request) {
-	// TODO
+func loginUser(w http.ResponseWriter, r *http.Request, u *model.User) {
+	// TODO: Implement JWT
 }

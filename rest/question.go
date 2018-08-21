@@ -9,7 +9,7 @@ import (
 	"github.com/thegrandpackard/ctf-scoreboard/model"
 )
 
-func createQuestion(w http.ResponseWriter, r *http.Request) {
+func createQuestion(w http.ResponseWriter, r *http.Request, u *model.User) {
 
 	question := &model.Question{}
 	decoder := json.NewDecoder(r.Body)
@@ -29,7 +29,7 @@ func createQuestion(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(question)
 }
 
-func getQuestion(w http.ResponseWriter, r *http.Request) {
+func getQuestion(w http.ResponseWriter, r *http.Request, u *model.User) {
 
 	vars := mux.Vars(r)
 	id, _ := strconv.ParseUint(vars["id"], 10, 64)
@@ -45,7 +45,7 @@ func getQuestion(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(question)
 }
 
-func updateQuestion(w http.ResponseWriter, r *http.Request) {
+func updateQuestion(w http.ResponseWriter, r *http.Request, u *model.User) {
 
 	question := &model.Question{}
 	decoder := json.NewDecoder(r.Body)
@@ -68,7 +68,7 @@ func updateQuestion(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(question)
 }
 
-func deleteQuestion(w http.ResponseWriter, r *http.Request) {
+func deleteQuestion(w http.ResponseWriter, r *http.Request, u *model.User) {
 
 	vars := mux.Vars(r)
 	id, _ := strconv.ParseUint(vars["id"], 10, 64)
@@ -84,7 +84,7 @@ func deleteQuestion(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("{}"))
 }
 
-func getAllQuestions(w http.ResponseWriter, r *http.Request) {
+func getAllQuestions(w http.ResponseWriter, r *http.Request, u *model.User) {
 
 	questions, err := getStorage().GetQuestions()
 	if err != nil {

@@ -15,6 +15,7 @@ type UserStorage interface {
 	GetUsers() (users []*model.User, err error)
 	GetUser(user *model.User) (err error)
 	UpdateUser(user *model.User) (err error)
+	UpdateUserPassword(user *model.User) (err error)
 	DeleteUser(user *model.User) (err error)
 }
 
@@ -47,15 +48,17 @@ func (s *Storage) DeleteUserTable() (err error) {
 // CreateUser - createUser
 func (s *Storage) CreateUser(user *model.User) (err error) {
 
-	// TODO: If password exists, bcrypt it
-
 	result, err := s.db.Exec(`
 		INSERT 
 		INTO user
 		SET username = ?,
+			password = ?,
+			email_address = ?,
 			team_id = ?,
 			created = NOW()`,
 		user.Username,
+		user.Password,
+		user.EmailAddress,
 		user.Team.ID)
 	if err != nil {
 		return
@@ -145,6 +148,19 @@ func (s *Storage) UpdateUser(user *model.User) (err error) {
 	WHERE id = ?`,
 		user.Username,
 		user.EmailAddress,
+		user.Team.ID)
+
+	return
+}
+
+// UpdateUserPassword - updateUserPassword
+func (s *Storage) UpdateUserPassword(user *model.User) (err error) {
+
+	_, err = s.db.Exec(`
+	UPDATE user
+	SET password = ?
+	WHERE id = ?`,
+		user.Password,
 		user.Team.ID)
 
 	return

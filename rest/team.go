@@ -9,7 +9,7 @@ import (
 	"github.com/thegrandpackard/ctf-scoreboard/model"
 )
 
-func createTeam(w http.ResponseWriter, r *http.Request) {
+func createTeam(w http.ResponseWriter, r *http.Request, u *model.User) {
 
 	team := &model.Team{}
 	decoder := json.NewDecoder(r.Body)
@@ -29,7 +29,7 @@ func createTeam(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(team)
 }
 
-func getTeam(w http.ResponseWriter, r *http.Request) {
+func getTeam(w http.ResponseWriter, r *http.Request, u *model.User) {
 
 	vars := mux.Vars(r)
 	id, _ := strconv.ParseUint(vars["id"], 10, 64)
@@ -45,7 +45,7 @@ func getTeam(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(team)
 }
 
-func updateTeam(w http.ResponseWriter, r *http.Request) {
+func updateTeam(w http.ResponseWriter, r *http.Request, u *model.User) {
 
 	team := &model.Team{}
 	decoder := json.NewDecoder(r.Body)
@@ -68,7 +68,7 @@ func updateTeam(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(team)
 }
 
-func deleteTeam(w http.ResponseWriter, r *http.Request) {
+func deleteTeam(w http.ResponseWriter, r *http.Request, u *model.User) {
 
 	vars := mux.Vars(r)
 	id, _ := strconv.ParseUint(vars["id"], 10, 64)
@@ -84,7 +84,7 @@ func deleteTeam(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("{}"))
 }
 
-func getAllTeams(w http.ResponseWriter, r *http.Request) {
+func getAllTeams(w http.ResponseWriter, r *http.Request, u *model.User) {
 
 	categories, err := getStorage().GetCategories()
 	if err != nil {

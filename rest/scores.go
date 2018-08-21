@@ -10,7 +10,7 @@ import (
 	"github.com/thegrandpackard/ctf-scoreboard/model"
 )
 
-func getQuestionsScores(w http.ResponseWriter, r *http.Request) {
+func getQuestionsScores(w http.ResponseWriter, r *http.Request, u *model.User) {
 
 	vars := mux.Vars(r)
 	id, _ := strconv.ParseUint(vars["id"], 10, 64)
@@ -26,7 +26,7 @@ func getQuestionsScores(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(scores)
 }
 
-func getUserScores(w http.ResponseWriter, r *http.Request) {
+func getUserScores(w http.ResponseWriter, r *http.Request, u *model.User) {
 
 	vars := mux.Vars(r)
 	id, _ := strconv.ParseUint(vars["id"], 10, 64)
@@ -42,7 +42,7 @@ func getUserScores(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(scores)
 }
 
-func getAllScores(w http.ResponseWriter, r *http.Request) {
+func getAllScores(w http.ResponseWriter, r *http.Request, u *model.User) {
 
 	scores, err := getStorage().GetScores()
 	if err != nil {
@@ -54,7 +54,7 @@ func getAllScores(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(scores)
 }
 
-func submitAnswer(w http.ResponseWriter, r *http.Request) {
+func submitAnswer(w http.ResponseWriter, r *http.Request, u *model.User) {
 
 	// Parse answer submitted by user
 	answer := &model.Question{}
