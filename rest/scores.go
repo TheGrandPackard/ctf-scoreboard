@@ -76,7 +76,7 @@ func submitAnswer(w http.ResponseWriter, r *http.Request, u *model.User) {
 	// Check if answer is correct
 	if question.Answer == answer.Answer {
 		score := &model.Score{}
-		score.User.ID = 0 // TODO Get from JWT
+		score.User.ID = u.ID
 		score.Question.ID = question.ID
 		err = getStorage().CreateScore(score)
 		if err != nil {
