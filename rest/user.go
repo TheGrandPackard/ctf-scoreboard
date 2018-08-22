@@ -11,6 +11,7 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"github.com/thegrandpackard/ctf-scoreboard/model"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func createUser(w http.ResponseWriter, r *http.Request, u *model.User) {
@@ -23,8 +24,15 @@ func createUser(w http.ResponseWriter, r *http.Request, u *model.User) {
 		return
 	}
 
-	// TODO: bcrypt the password
+	// bcrypt the password
+	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 15)
+	if err != nil {
+		handleError(w, r, err)
+		return
+	}
+	user.Password = string(hash)
 
+	// store the user
 	err = getStorage().CreateUser(user)
 	if err != nil {
 		handleError(w, r, err)
@@ -117,7 +125,13 @@ func changeUserPassword(w http.ResponseWriter, r *http.Request, u *model.User) {
 
 	if u.ID == user.ID {
 
-		// TODO: bcrypt the password
+		// bcrypt the password
+		hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 15)
+		if err != nil {
+			handleError(w, r, err)
+			return
+		}
+		user.Password = string(hash)
 
 		err = getStorage().UpdateUserPassword(user)
 		if err != nil {
@@ -154,8 +168,7 @@ func loginUser(w http.ResponseWriter, r *http.Request, u *model.User) {
 		return
 	}
 
-	// TODO: bcrypt the submitted password
-	if user.Username == dbUser.Username && user.Password == dbUser.Password {
+	if bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(user.Password)) == nil {
 		/* Create the token */
 		token := jwt.New(jwt.SigningMethodHS256)
 

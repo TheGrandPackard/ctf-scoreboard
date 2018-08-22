@@ -150,7 +150,7 @@ func (s *Storage) GetUserAuthentication(user *model.User) (err error) {
 			   team_id,
 			   UNIX_TIMESTAMP(created)
 		FROM user
-		WHERE username = ?`, user.Username).Scan(
+		WHERE username LIKE ?`, user.Username).Scan(
 		&user.ID,
 		&user.Admin,
 		&user.Username,
