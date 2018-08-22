@@ -81,12 +81,13 @@ type authenticatedHandlerFunc (func(w http.ResponseWriter, r *http.Request, u *m
 // HTTP Logging and Authentication
 func logHandler(next func(w http.ResponseWriter, r *http.Request, u *model.User)) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// TODO: Make like apache logging
-		log.Printf("Handled HTTP Request: %+v", r)
+
+		user := &model.User{Username: "-"}
 
 		tokenString := r.Header.Get("Authorization")
 		if tokenString == "" {
 			next(w, r, nil)
+			logRequest(r, user)
 			return
 		}
 
@@ -101,31 +102,49 @@ func logHandler(next func(w http.ResponseWriter, r *http.Request, u *model.User)
 		})
 		if err != nil {
 			handleError(w, r, err)
+			logRequest(r, user)
 			return
 		}
 
 		// Get user from token
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			log.Printf("ID: %+v, Username: %+v, expiration: %+v", claims["id"], claims["username"], claims["expiration"])
+			//log.Printf("ID: %+v, Username: %+v, expiration: %+v", claims["id"], claims["username"], claims["expiration"])
 
-			userID, ok := claims["id"].(float64)
+			userID, ok := claims["id"].(float64) // This is a float64 even though it is stored as a uint64 when it is created
 			if ok {
-				user := &model.User{ID: uint64(userID)}
+				user = &model.User{ID: uint64(userID)}
 				err = getStorage().GetUser(user)
 				if err != nil {
 					handleError(w, r, err)
+					logRequest(r, user)
 					return
 				}
 				next(w, r, user)
+				logRequest(r, user)
+				return
 			} else {
 				handleError(w, r, errors.New("Invalid token"))
+				logRequest(r, user)
 				return
 			}
 		} else {
 			handleError(w, r, err)
+			logRequest(r, user)
 			return
 		}
 	})
+}
+
+func logRequest(r *http.Request, user *model.User) {
+	// TODO: Implement new response writer in order to get response code and response size: https://www.reddit.com/r/golang/comments/7p35s4/how_do_i_get_the_response_status_for_my_middleware/
+	//127.0.0.1 frank "GET /apache_pb.gif HTTP/1.0" 200 2326 "Mozilla/4.08 [en] (Win98; I ;Nav)"
+	log.Printf("%s %s \"%s\" %d %d \"%s\"",
+		r.RemoteAddr,
+		user.Username,
+		r.URL,
+		0, //"response_code",
+		0, //"response_size",
+		r.UserAgent())
 }
 
 // Authorization
