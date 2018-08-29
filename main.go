@@ -5,20 +5,28 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 
+	"github.com/thegrandpackard/ctf-scoreboard/config"
 	"github.com/thegrandpackard/ctf-scoreboard/rest"
 	"github.com/thegrandpackard/ctf-scoreboard/storage/mariadb"
 )
 
+var err error
+var storage *mariadb.Storage
+
 func main() {
 	log.Printf("CTF Scoreboard API v0.1")
 
-	// TODO: Get config from text file
-	storageConfig := "ctf-scoreboard:qwerasdf@tcp(127.0.0.1:3306)/ctf-scoreboard"
+	configuration := config.LoadConfig()
 
 	// Initialize Storage
-	storage, err := mariadb.New(storageConfig)
-	if err != nil {
-		log.Fatal("Error opening database: " + err.Error())
+	// FEATURE: Add support for additional storage types
+	if configuration.StorageType == "mysql" {
+		storage, err = mariadb.New(configuration.StorageConfig)
+		if err != nil {
+			log.Fatal("Error opening database: " + err.Error())
+		}
+	} else {
+		log.Fatalf("Unsupported storage type: %s", configuration.StorageType)
 	}
 
 	// Initialize REST Interface

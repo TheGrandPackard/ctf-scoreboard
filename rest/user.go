@@ -10,6 +10,7 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
+	"github.com/thegrandpackard/ctf-scoreboard/config"
 	"github.com/thegrandpackard/ctf-scoreboard/model"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -181,7 +182,12 @@ func loginUser(w http.ResponseWriter, r *http.Request, u *model.User) {
 		claims["expiration"] = time.Now().Add(time.Hour * 24).Unix()
 
 		/* Sign the token with our secret */
-		tokenString, _ := token.SignedString(mySigningKey)
+		configuration := config.LoadConfig()
+		tokenString, err := token.SignedString([]byte(configuration.AuthSecret))
+		if err != nil {
+			handleError(w, r, err)
+			return
+		}
 
 		/* Finally, write the token to the browser window */
 		w.Write([]byte("{ \"token\": \"" + tokenString + "\" }"))

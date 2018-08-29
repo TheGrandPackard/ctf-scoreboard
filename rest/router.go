@@ -11,14 +11,12 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
+	"github.com/thegrandpackard/ctf-scoreboard/config"
 	"github.com/thegrandpackard/ctf-scoreboard/model"
 	"github.com/thegrandpackard/ctf-scoreboard/storage/mariadb"
 )
 
 var storage *mariadb.Storage
-
-// TODO: Move this to the config file
-var mySigningKey = []byte("s3cr3t")
 
 func getStorage() *mariadb.Storage {
 	return storage
@@ -59,7 +57,7 @@ func InitializeRoutes(s *mariadb.Storage) (err error) {
 	r.HandleFunc("/api/user/{id:[0-9]+}", logHandler(requireAdmin(updateUser))).Methods("POST")           // Update existing user by ID
 	r.HandleFunc("/api/user/{id:[0-9]+}", logHandler(requireAdmin(deleteUser))).Methods("DELETE")         // Delete existing user by ID
 	r.HandleFunc("/api/users", logHandler(requireUser(getAllUsers))).Methods("GET")                       // Get all users
-	r.HandleFunc("/api/user/login", logHandler(loginUser)).Methods("POST")                                // Authenicate exister user for login, returns authorization token
+	r.HandleFunc("/api/user/login", logHandler(loginUser)).Methods("POST", "OPTIONS")                     // Authenicate exister user for login, returns authorization token
 	r.HandleFunc("/api/user/changepassword", logHandler(requireUser(changeUserPassword))).Methods("POST") // Change password for logged in user
 
 	http.Handle("/", r)
@@ -82,6 +80,14 @@ type authenticatedHandlerFunc (func(w http.ResponseWriter, r *http.Request, u *m
 func logHandler(next func(w http.ResponseWriter, r *http.Request, u *model.User)) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
+		// TODO: Fix CORS support
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+		if r.Method == "OPTIONS" {
+			return
+		}
+
 		user := &model.User{Username: "-"}
 
 		tokenString := r.Header.Get("Authorization")
@@ -93,12 +99,13 @@ func logHandler(next func(w http.ResponseWriter, r *http.Request, u *model.User)
 
 		// Parse token from header
 		tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
+		configuration := config.LoadConfig()
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 			}
 
-			return mySigningKey, nil
+			return configuration.AuthSecret, nil
 		})
 		if err != nil {
 			handleError(w, r, err)
